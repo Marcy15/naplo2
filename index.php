@@ -6,7 +6,12 @@ require_once "selects.php";
 
 $evfolyamok = ["2024-2025"];
 $selectedEvfolyam = $evfolyamok[0];
-$selectedClass = getClasses()[0]["name"];
+$loadClasses = getClasses();
+$selectedClass = "";
+if($loadClasses != null && $loadClasses[0] != null && $loadClasses[0]["name"] != null) {
+    $selectedClass = $loadClasses[0]["name"];
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["classSelector"])) {
     $selectedClass = $_POST['classSelector'];
 }
@@ -14,16 +19,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["classSelector"])) {
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["export"])) {
     if(dbExists("school")) {
         $message = "Adatbázis már létezik.";
-            echo "<script type='text/javascript'>alert('$message');</script>";
+        echo "<script type='text/javascript'>alert('$message');</script>";
+        
     } else {
         loadToDataBase();
+        $message = "Adatbázis kiexportálva.";
+        echo "<script type='text/javascript'>alert('$message');</script>";
     }
+    header('Location: index.php');
+    exit;
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete"])) {
-    execSql("DROP DATABASE school");
+    execSql("DROP DATABASE school;");
     $message = "Adatbázis törölve.";
     echo "<script type='text/javascript'>alert('$message');</script>";
+    header('Location: index.php');
+    exit;
 }
 
 function generateClassList() {
@@ -144,6 +156,7 @@ function loadToDataBase(){
 
 
 showDatabaseThing();
+if($selectedClass == "") return;
 showYearSelector($evfolyamok);
 showTopTen();
 showClassSelector($selectedEvfolyam,$selectedClass,getClasses());
