@@ -10,14 +10,16 @@ function showDatabaseThing(){
     echo '</form>';
 }
 
-function showYearSelector($evfolyamok): void {
+function showYearSelector($evfolyamok,$selectedEvfolyam): void {
     
     echo '<form method="post" action="" id="evfolyamForm">
     Évfolyam:
-    <select name="gyumolcs" onchange="document.getElementById(\'evfolyamForm\').submit()">';
+    <select name="yearSelector" onchange="document.getElementById(\'evfolyamForm\').submit()">';
 
     foreach ($evfolyamok as $evfolyam) {
-        echo "<option value='$evfolyam'>$evfolyam</option>";
+        $selected = ($evfolyam === $selectedEvfolyam) ? 'selected' : '';
+
+        echo "<option $selected value='$evfolyam'>$evfolyam</option>";
     }
 
     echo '</select>
@@ -53,10 +55,16 @@ function showStudents($class,$students){
 function showClassAvg($avg) {
     echo "Osztály átlaga: $avg<br>";
 }
-
-function showTopTen(){
-    $top = getTopTen();
-    echo "Iskola Top 10:<br>";
+function showAllTopTen(){
+    $top = getAllTopTen();
+    echo "Hall of fame Top 10:<br>";
+    for($i = 0;$i<10;$i++){
+        echo "# ".($i+1)." ".$top[$i]["name"].": ".$top[$i]["avg"]."<br>";
+    }
+}
+function showTopTen($year){
+    $top = getTopTen($year);
+    echo "Évfolyam Top 10:<br>";
     for($i = 0;$i<10;$i++){
         echo "# ".($i+1)." ".$top[$i]["name"].": ".$top[$i]["avg"]."<br>";
     }

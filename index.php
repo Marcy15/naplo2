@@ -4,7 +4,7 @@ require_once 'mysql.php';
 require_once 'render.php';
 require_once "selects.php";
 
-$evfolyamok = ["2024-2025"];
+$evfolyamok = ["2022"];
 $selectedEvfolyam = $evfolyamok[0];
 $loadClasses = getClasses();
 $selectedClass = "";
@@ -14,6 +14,9 @@ if($loadClasses != null && $loadClasses[0] != null && $loadClasses[0]["name"] !=
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["classSelector"])) {
     $selectedClass = $_POST['classSelector'];
+}
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["yearSelector"])) {
+    $selectedEvfolyam = $_POST['yearSelector'];
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["export"])) {
@@ -84,6 +87,10 @@ function generateStudent($class) {
 function loadToDataBase(){
     
     createDatabase();
+    execSql("CREATE TABLE evfolyamok (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        evfolyam VARCHAR(50)
+        ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_hungarian_ci");
     execSql("CREATE TABLE osztaly (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(10) NOT NULL
@@ -93,7 +100,9 @@ function loadToDataBase(){
         name VARCHAR(100) NOT NULL,
         gender VARCHAR(10) NOT NULL,
         class_id INT NOT NULL,
-        FOREIGN KEY (class_id) REFERENCES osztaly(id)
+        FOREIGN KEY (class_id) REFERENCES osztaly(id),
+        year_id INT NOT NULL,
+        FOREIGN KEY (year_id) REFERENCES evfolyamok(id)
     ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_hungarian_ci");
     execSql("CREATE TABLE tantargyak (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -109,17 +118,32 @@ function loadToDataBase(){
         FOREIGN KEY (subject_id) REFERENCES tantargyak(id)
     ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_hungarian_ci");
 
+    loadYear("2022");
+    loadYear("2023");
+    //loadYear("2024");
+
+    
+}
+
+
+function loadYear($year) {
     $classIds = [];
     $subjectIds = [];
     $classList = generateClassList();
+    $yearId = execSql("INSERT INTO evfolyamok (evfolyam) VALUES ('$year')")." a s d";
+    
     foreach ($classList as $class => $students) {
-        $classIds[$class] = execSql("INSERT INTO osztaly (name) VALUES ('$class')");
+        
+        $classIds[$class] = execSql("INSERT INTO osztaly (name) VALUES ('$class')
+        ON DUPLICATE KEY UPDATE name = name;
+        ");
+            
         
         $gradeData = [];
 
         foreach ($students as $student) {
 
-            $studentId =execSql("INSERT INTO nev (name, gender, class_id) VALUES ('".$student["name"]."', '".$student["gender"]."', '".$classIds[$class]."')");
+            $studentId = execSql("INSERT INTO nev (name, gender, class_id,year_id) VALUES ('".$student["name"]."', '".$student["gender"]."', '".$classIds[$class]."','".$yearId."')");
 
             foreach ($student["grades"] as $subject => $grades) {
 
@@ -154,12 +178,13 @@ function loadToDataBase(){
     }
 }
 
-
 showDatabaseThing();
 if($selectedClass == "") return;
-showYearSelector($evfolyamok);
-showTopTen();
+showAllTopTen();
+showYearSelector($evfolyamok,$selectedEvfolyam);
+
+showTopTen($selectedEvfolyam);
 showClassSelector($selectedEvfolyam,$selectedClass,getClasses());
-showClassAvg(getClassAvg($selectedClass)["avg"]);
-showStudents($selectedClass,getStudents($selectedClass));
+showClassAvg(getClassAvg($selectedClass,$selectedEvfolyam)["avg"]);
+showStudents($selectedClass,getStudents($selectedClass,$selectedEvfolyam));
 
