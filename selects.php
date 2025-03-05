@@ -34,3 +34,10 @@ function getTopTen($year){
     $sql = "SELECT nev.name, AVG(osztalyzat.grade) AS avg FROM osztalyzat JOIN nev ON nev.id = osztalyzat.student_id JOIN evfolyamok ON nev.year_id = evfolyamok.id WHERE evfolyamok.evfolyam = '$year' GROUP BY osztalyzat.student_id ORDER BY avg DESC LIMIT 10;";
     return execSql($sql);
 }
+
+function classExixits($class) {
+    $sql = "SELECT name from osztaly WHERE name='$class';";
+    $r = execSql($sql);
+    if(!$r) return false;
+    return true;
+}

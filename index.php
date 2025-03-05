@@ -18,6 +18,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["classSelector"])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["yearSelector"])) {
     $selectedEvfolyam = $_POST['yearSelector'];
 }
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["newclass"])) {
+    if(!classExixits($_POST['newClassName'])) {
+        execSql("INSERT INTO osztaly (name) VALUES ('".$_POST['newClassName']."');");
+        $message = $_POST['newClassName']." osztály létrehozva";
+        echo "<script type='text/javascript'>alert('$message');</script>";
+    }
+}
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["export"])) {
     if(dbExists("school")) {

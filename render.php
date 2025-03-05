@@ -36,8 +36,12 @@ function showClassSelector($evfolyam,$selectedClass,$classes) {
         echo "<option $selected value='".$class["name"]."'>".$class["name"]."</option>";
     }
 
-    echo '</select>
-    </form>';
+    echo '</select><br>';
+    echo "<input type='text' name='newClassName' placeholder='9A'/>";
+    echo '<button id="newclass" name="newclass">Új osztály</button>';
+    echo "</form>";
+
+
 
     
 }
@@ -46,7 +50,9 @@ function showStudents($class,$students){
     foreach($students as $student) {
         echo $student["name"]." - ".getStudentAvg($student["name"])["avg"]."<br>";
         foreach(getStudentSubjectAvgs($student["name"]) as $row) {
-            echo "- ".$row["name"].": ".$row["avg"]."<br>";
+            echo "- ".$row["name"].": ".$row["avg"];
+            
+            echo "<br>";
         }
         echo "<br>";
     } 
