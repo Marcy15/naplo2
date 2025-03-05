@@ -4,7 +4,7 @@ require_once 'mysql.php';
 require_once 'render.php';
 require_once "selects.php";
 
-$evfolyamok = ["2022"];
+$evfolyamok = ["2022-2023","2023-2024","2024-2025"];
 $selectedEvfolyam = $evfolyamok[0];
 $loadClasses = getClasses();
 $selectedClass = "";
@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["export"])) {
         echo "<script type='text/javascript'>alert('$message');</script>";
         
     } else {
-        loadToDataBase();
+        loadToDataBase($evfolyamok);
         $message = "Adatbázis kiexportálva.";
         echo "<script type='text/javascript'>alert('$message');</script>";
     }
@@ -84,7 +84,7 @@ function generateStudent($class) {
     return $student;
 }
 
-function loadToDataBase(){
+function loadToDataBase($evfolyamok){
     
     createDatabase();
     execSql("CREATE TABLE evfolyamok (
@@ -118,8 +118,9 @@ function loadToDataBase(){
         FOREIGN KEY (subject_id) REFERENCES tantargyak(id)
     ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_hungarian_ci");
 
-    loadYear("2022");
-    loadYear("2023");
+    foreach($evfolyamok as $ef) {
+        loadYear($ef);
+    }
     //loadYear("2024");
 
     
@@ -127,10 +128,13 @@ function loadToDataBase(){
 
 
 function loadYear($year) {
+    
+    
+    
     $classIds = [];
     $subjectIds = [];
     $classList = generateClassList();
-    $yearId = execSql("INSERT INTO evfolyamok (evfolyam) VALUES ('$year')")." a s d";
+    $yearId = execSql("INSERT INTO evfolyamok (evfolyam) VALUES ('$year')").";";
     
     foreach ($classList as $class => $students) {
         
@@ -143,12 +147,22 @@ function loadYear($year) {
 
         foreach ($students as $student) {
 
+            
+
             $studentId = execSql("INSERT INTO nev (name, gender, class_id,year_id) VALUES ('".$student["name"]."', '".$student["gender"]."', '".$classIds[$class]."','".$yearId."')");
-
+            
             foreach ($student["grades"] as $subject => $grades) {
-
+                
                 if (!isset($subjectIds[$subject])) {
-                    $subjectIds[$subject] = execSql("INSERT IGNORE INTO tantargyak (name) VALUES ('$subject')");
+                    $subjectIds[$subject] = execSql("INSERT INTO tantargyak (name) VALUES ('$subject')");
+                    
+                    if($subjectIds[$subject] == "") {
+                        $subjects = execSql("SELECT * from tantargyak");
+                        foreach($subjects as $row) {
+                            $subjectIds[$row["name"]] = (int)$row["id"];
+                        }    
+                    }
+                    
                 }
 
 
@@ -172,10 +186,13 @@ function loadYear($year) {
 
 
         if (!empty($gradeData)) {
-            execSql("INSERT INTO osztalyzat (student_id, subject_id, grade, date) VALUES " . implode(", ", $gradeData));
+            $sql = "INSERT INTO osztalyzat (student_id, subject_id, grade, date) VALUES " . implode(", ", $gradeData);
+            $valami = execSql($sql);
+            
         }
         
     }
+    
 }
 
 showDatabaseThing();
